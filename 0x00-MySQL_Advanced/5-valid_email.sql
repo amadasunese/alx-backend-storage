@@ -4,12 +4,12 @@
 DELIMITER //
 
 CREATE TRIGGER reset_valid_email
-AFTER UPDATE ON your_table
+AFTER UPDATE ON users
 FOR EACH ROW
 BEGIN
     IF NEW.email != OLD.email THEN
         -- Reset the valid_email attribute to its default value
-        SET NEW.valid_email = DEFAULT;
+        SET NEW.valid_email = 0;
     END IF;
 END;
 //
