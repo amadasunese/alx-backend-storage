@@ -1,5 +1,4 @@
--- A SQL script that creates a trigger that decreases the quantity 
--- of an item after adding a new order.
+-- Initial
 
 Quantity in the table items can be negative.
 DROP TABLE IF EXISTS items;
