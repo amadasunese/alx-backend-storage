@@ -1,46 +1,38 @@
 #!/usr/bin/env python3
-"""
-Caching request module
-"""
+'''A module with tools for request caching and tracking.
+'''
+import redis
 import requests
-from cachetools import TTLCache
 from functools import wraps
-
-# Create a cache with a TTL of 10 seconds
-cache = TTLCache(maxsize=100, ttl=10)
+from typing import Callable
 
 
+redis_store = redis.Redis()
+'''The module-level Redis instance.
+'''
+
+
+def data_cacher(method: Callable) -> Callable:
+    '''Caches the output of fetched data.
+    '''
+    @wraps(method)
+    def invoker(url) -> str:
+        '''The wrapper function for caching the output.
+        '''
+        redis_store.incr(f'count:{url}')
+        result = redis_store.get(f'result:{url}')
+        if result:
+            return result.decode('utf-8')
+        result = method(url)
+        redis_store.set(f'count:{url}', 0)
+        redis_store.setex(f'result:{url}', 10, result)
+        return result
+    return invoker
+
+
+@data_cacher
 def get_page(url: str) -> str:
-    """
-    Return the cached content
-    """
-    if url in cache:
-        return cache[url]
-
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        cache[url] = response.text
-    else:
-        response.raise_for_status()
-
-    return response.text
-
-
-def track_access_count(url):
-    count_key = f"count:{url}"
-    access_count = cache.get(count_key, 0)
-    access_count += 1
-    cache[count_key] = access_count
-
-
-def track_access(func):
-    @wraps(func)
-    def wrapper(url):
-        track_access_count(url)
-        return func(url)
-    return wrapper
-
-
-get_page = track_access(get_page)
-
+    '''Returns the content of a URL after caching the request's response,
+    and tracking the request.
+    '''
+    return requests.get(url).text
