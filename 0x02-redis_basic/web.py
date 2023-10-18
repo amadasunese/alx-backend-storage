@@ -44,12 +44,3 @@ def track_access(func):
 
 get_page = track_access(get_page)
 
-
-if __name__ == "__main__":
-    url = "http://slowwly.robertomurray.co.uk/delay/1000/url/http://www.example.com"
-
-    for _ in range(5):
-        content = get_page(url)
-        print(f"Accessed URL: {url}")
-
-    print(f"Total access count for {url}: {cache[f'count:{url}']}")
